@@ -1,4 +1,4 @@
-figma.showUI(**html**, { width: 320, height: 240 });
+figma.showUI(html, { width: 320, height: 240 });
 
 function getCollections() {
 try {
