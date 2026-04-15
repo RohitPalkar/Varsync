@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 
 <html>
-<body style="font-family: Inter, sans-serif; padding: 12px;">
+<body style="font-family: Inter; padding: 12px;">
   <h3>VarSync</h3>
 
 <select id="collections"></select> <br><br>
 
-<button id="copy">Copy Collection</button> <button id="paste">Paste Collection</button>
+<button id="copy">Copy</button> <button id="paste">Paste</button>
 
   <script>
     const dropdown = document.getElementById("collections");
 
-    // Load collections
     parent.postMessage({ pluginMessage: { type: "getCollections" } }, "*");
 
     onmessage = (event) => {
@@ -38,9 +37,7 @@
 
     document.getElementById("paste").onclick = () => {
       parent.postMessage({
-        pluginMessage: {
-          type: "paste"
-        }
+        pluginMessage: { type: "paste" }
       }, "*");
     };
   </script>
