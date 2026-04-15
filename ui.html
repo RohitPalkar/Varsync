@@ -1,1 +1,49 @@
+<!DOCTYPE html>
 
+<html>
+<body style="font-family: Inter, sans-serif; padding: 12px;">
+  <h3>VarSync</h3>
+
+<select id="collections"></select> <br><br>
+
+<button id="copy">Copy Collection</button> <button id="paste">Paste Collection</button>
+
+  <script>
+    const dropdown = document.getElementById("collections");
+
+    // Load collections
+    parent.postMessage({ pluginMessage: { type: "getCollections" } }, "*");
+
+    onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+
+      if (msg.type === "collections") {
+        msg.data.forEach(c => {
+          const option = document.createElement("option");
+          option.value = c.id;
+          option.textContent = c.name;
+          dropdown.appendChild(option);
+        });
+      }
+    };
+
+    document.getElementById("copy").onclick = () => {
+      parent.postMessage({
+        pluginMessage: {
+          type: "copy",
+          collectionId: dropdown.value
+        }
+      }, "*");
+    };
+
+    document.getElementById("paste").onclick = () => {
+      parent.postMessage({
+        pluginMessage: {
+          type: "paste"
+        }
+      }, "*");
+    };
+  </script>
+
+</body>
+</html>
