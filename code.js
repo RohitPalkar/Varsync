@@ -4,25 +4,20 @@ function getCollections() {
 try {
 return figma.variables.getLocalVariableCollections();
 } catch (e) {
-figma.notify("Variables not supported in this file");
+figma.notify("Variables not supported");
 return [];
 }
 }
 
 function getVariablesFromCollection(collection) {
-try {
 return collection.variableIds
 .map(id => figma.variables.getVariableById(id))
-.filter(v => v !== null);
-} catch (e) {
-return [];
-}
+.filter(v => v);
 }
 
 async function copyCollection(collectionId) {
 try {
-const collections = getCollections();
-const collection = collections.find(c => c.id === collectionId);
+const collection = getCollections().find(c => c.id === collectionId);
 
 ```
 if (!collection) {
@@ -46,7 +41,7 @@ const data = {
 
 await figma.clientStorage.setAsync("varsync_clipboard", data);
 
-figma.notify("Copied successfully");
+figma.notify("Copied");
 ```
 
 } catch (e) {
@@ -72,32 +67,27 @@ const newCollection = figma.variables.createVariableCollection(
 const modeMap = {};
 modeMap[data.collection.modes[0].modeId] = newCollection.modes[0].modeId;
 
-// Create additional modes
 data.collection.modes.slice(1).forEach(mode => {
   const newModeId = newCollection.addMode(mode.name);
   modeMap[mode.modeId] = newModeId;
 });
 
 data.variables.forEach(v => {
-  try {
-    const newVar = figma.variables.createVariable(
-      v.name,
-      newCollection.id,
-      v.type
-    );
+  const newVar = figma.variables.createVariable(
+    v.name,
+    newCollection.id,
+    v.type
+  );
 
-    Object.keys(v.valuesByMode).forEach(oldModeId => {
-      const newModeId = modeMap[oldModeId];
-      if (newModeId) {
-        newVar.setValueForMode(newModeId, v.valuesByMode[oldModeId]);
-      }
-    });
-  } catch (e) {
-    console.error("Failed variable:", v.name);
-  }
+  Object.keys(v.valuesByMode).forEach(oldModeId => {
+    const newModeId = modeMap[oldModeId];
+    if (newModeId) {
+      newVar.setValueForMode(newModeId, v.valuesByMode[oldModeId]);
+    }
+  });
 });
 
-figma.notify("Pasted successfully");
+figma.notify("Pasted");
 ```
 
 } catch (e) {
