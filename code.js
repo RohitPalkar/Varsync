@@ -1,76 +1,89 @@
-figma.showUI("<h3>VarSync Working</h3>", { width: 200, height: 100 });
+figma.showUI(**html**, { width: 320, height: 220 });
 
-// Get all collections
 function getCollections() {
+try {
 return figma.variables.getLocalVariableCollections();
+} catch (e) {
+figma.notify("Error fetching collections");
+return [];
+}
 }
 
-// Get variables by collection
-function getVariables(collectionId) {
-return figma.variables.getLocalVariables().filter(v => v.variableCollectionId === collectionId);
-}
-
-// Copy logic
 async function copyCollection(collectionId) {
+try {
 const collections = getCollections();
 const collection = collections.find(c => c.id === collectionId);
 
-const variables = getVariables(collectionId);
+```
+if (!collection) {
+  figma.notify("Collection not found");
+  return;
+}
+
+const variables = figma.variables
+  .getLocalVariables()
+  .filter(v => v.variableCollectionId === collectionId);
 
 const data = {
-collection: {
-name: collection.name,
-modes: collection.modes
-},
-variables: variables.map(v => ({
-name: v.name,
-resolvedType: v.resolvedType,
-valuesByMode: v.valuesByMode,
-aliasTo: null // will improve later
-}))
+  collection: {
+    name: collection.name,
+    modes: collection.modes
+  },
+  variables: variables.map(v => ({
+    name: v.name,
+    resolvedType: v.resolvedType,
+    valuesByMode: v.valuesByMode || {},
+    aliasTo: null
+  }))
 };
 
 await figma.clientStorage.setAsync("varsync_clipboard", data);
 
-figma.notify("Collection copied");
+figma.notify("Copied successfully");
+```
+
+} catch (e) {
+figma.notify("Copy failed");
+console.error(e);
+}
 }
 
-// Paste logic
 async function pasteCollection() {
+try {
 const data = await figma.clientStorage.getAsync("varsync_clipboard");
 
+```
 if (!data) {
-figma.notify("Nothing copied");
-return;
+  figma.notify("Nothing to paste");
+  return;
 }
 
-const newCollection = figma.variables.createVariableCollection(data.collection.name + " Copy");
+const newCollection = figma.variables.createVariableCollection(
+  data.collection.name + " Copy"
+);
 
-// create modes
-data.collection.modes.forEach(mode => {
-if (mode.name !== newCollection.modes[0].name) {
-newCollection.addMode(mode.name);
-}
-});
-
-// create variables
+// create variables safely
 data.variables.forEach(v => {
-const variable = figma.variables.createVariable(v.name, newCollection.id, v.resolvedType);
-
-```
-Object.keys(v.valuesByMode).forEach(modeId => {
   try {
-    variable.setValueForMode(newCollection.modes[0].modeId, v.valuesByMode[modeId]);
-  } catch {}
+    figma.variables.createVariable(
+      v.name,
+      newCollection.id,
+      v.resolvedType
+    );
+  } catch (e) {
+    console.error("Variable failed:", v.name);
+  }
 });
+
+figma.notify("Pasted successfully");
 ```
 
-});
-
-figma.notify("Collection pasted");
+} catch (e) {
+figma.notify("Paste failed");
+console.error(e);
+}
 }
 
-// Listen UI
 figma.ui.onmessage = async (msg) => {
 if (msg.type === "getCollections") {
 const collections = getCollections();
@@ -85,4 +98,3 @@ if (msg.type === "paste") {
 await pasteCollection();
 }
 };
-
