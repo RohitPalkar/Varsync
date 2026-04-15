@@ -1,4 +1,4 @@
-figma.showUI(**html**, { width: 320, height: 220 });
+figma.showUI("<h3>VarSync Working</h3>", { width: 200, height: 100 });
 
 // Get all collections
 function getCollections() {
